@@ -1,28 +1,28 @@
 const elasticsearch = require('elasticsearch'),
-	uuidv4 = require('uuid/v4');
+    uuidv4 = require('uuid/v4');
 
 var client = new elasticsearch.Client({
-	host: "nuc:9200"
+    host: "nuc:9200"
 });
 
 
 const idRoomMapping = {
-	"43936": "Badezimmer",
-	"43937": "Wintergarten",
-	"43938": "Küche",
-	"43939": "Vorzimmer",
-	"43940": "Wohnzimmer"
+    "43936": "Badezimmer",
+    "43937": "Wintergarten",
+    "43938": "Küche",
+    "43939": "Vorzimmer",
+    "43940": "Wohnzimmer"
 };
 
 const UHOME_FIELD_MAPPING = {
-	"temperature_C": "temperature"
+    "temperature_C": "temperature"
 };
 
 const UHOME_FIELD_NAMES = [
-	"id",
-	"temperature_C",
-	"humidity",
-	"voltage"
+    "id",
+    "temperature_C",
+    "humidity",
+    "voltage"
 ]
 
 var spawn = require('child_process').spawn,
@@ -72,39 +72,39 @@ ls.stdout.on('data', function(data) {
 
         if (dataSet.length === 0)
             return;
-	
-	var now = new Date(),
-	    indexName = "sensors-" + now.getUTCFullYear() + "." + (now.getUTCMonth() + 1) + "." + now.getUTCDate();
+
+        var now = new Date(),
+            indexName = "sensors-" + now.getUTCFullYear() + "." + (now.getUTCMonth() + 1) + "." + now.getUTCDate();
 
         for (var i = 0; i < dataSet.length; i++) {
             var data = dataSet[i];
             switch (data.model) {
                 case 'µHome':
-		    var doc = {
-			    "model": "uhome",
-			    "@timestamp": data.time
-		    };
+                    var doc = {
+                        "model": "uhome",
+                        "@timestamp": data.time
+                    };
 
-		    if(data.hasOwnProperty("id") && idRoomMapping.hasOwnProperty(data.id)) {
-			    doc.room = idRoomMapping[data.id];
-		    }
+                    if(data.hasOwnProperty("id") && idRoomMapping.hasOwnProperty(data.id)) {
+                        doc.room = idRoomMapping[data.id];
+                    }
 
-		    UHOME_FIELD_NAMES.forEach(f => {
-			    if(data.hasOwnProperty(f) && data[f] > 0) {
-				    let pname = UHOME_FIELD_MAPPING.hasOwnProperty(f) ? UHOME_FIELD_MAPPING[f] : f;
-				    doc[pname] = data[f];
-			    }
-		    });
-		    client.create({
-			    index: indexName,
-			    type: "doc",
-			    id: uuidv4(),
-			    body: doc
-		    }, (err, res) => {
-			    if(err) {
-				    console.log("ERROR", err);
-			    }
-		    });
+                    UHOME_FIELD_NAMES.forEach(f => {
+                        if(data.hasOwnProperty(f) && data[f] > 0) {
+                            let pname = UHOME_FIELD_MAPPING.hasOwnProperty(f) ? UHOME_FIELD_MAPPING[f] : f;
+                            doc[pname] = data[f];
+                        }
+                    });
+                    client.create({
+                        index: indexName,
+                        type: "doc",
+                        id: uuidv4(),
+                        body: doc
+                    }, (err, res) => {
+                        if(err) {
+                            console.log("ERROR", err);
+                        }
+                    });
                     break;
             }
         }
