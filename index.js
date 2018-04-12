@@ -1,38 +1,17 @@
-const elasticsearch = require('elasticsearch'),
+"use strict";
+
+const config = require('./config'),
+    elasticsearch = require('elasticsearch'),
     uuidv4 = require('uuid/v4'),
     throughLineReader = require('through2-linereader'),
     process = require('process');
 
-var client = new elasticsearch.Client({
-    host: "nuc:9200"
-});
-
-
-const idRoomMapping = {
-    "43936": "Badezimmer",
-    "43937": "Wintergarten",
-    "43938": "Küche",
-    "43939": "Vorzimmer",
-    "43940": "Wohnzimmer",
-    "43941": "Schlafzimmer"
-};
-
-const UHOME_FIELD_MAPPING = {
-    "temperature_C": "temperature"
-};
-
-const UHOME_FIELD_NAMES = [
-    "id",
-    "temperature_C",
-    "humidity",
-    "voltage"
-]
-
+var client = new elasticsearch.Client(config.es.client);
 var env = Object.create(process.env);
-env.TZ = 'UTC';
+env.TZ = config.rtlTimezone;
 
 var spawn = require('child_process').spawn,
-    ls = spawn('rtl_433', ['-f', '433950000', '-F', 'json', '-R', '99', '-g', '0'], { env: env });
+    ls = spawn(config.rtlBinary, config.rtlArguments, { env: env });
 
 
 ls.stdout.pipe(throughLineReader()).on('data', function(data) {
@@ -41,7 +20,7 @@ ls.stdout.pipe(throughLineReader()).on('data', function(data) {
         var data = JSON.parse(data);
 
         var now = new Date(),
-            indexName = "sensors-" + now.getUTCFullYear() + "." + (now.getUTCMonth() + 1) + "." + now.getUTCDate();
+            indexName = config.indexBaseName + now.getUTCFullYear() + "." + (now.getUTCMonth() + 1) + "." + now.getUTCDate();
 
         switch (data.model) {
             case 'µHome':
@@ -50,19 +29,19 @@ ls.stdout.pipe(throughLineReader()).on('data', function(data) {
                     "@timestamp": data.time
                 };
 
-                if(data.hasOwnProperty("id") && idRoomMapping.hasOwnProperty(data.id)) {
-                    doc.room = idRoomMapping[data.id];
+                if(data.hasOwnProperty("id") && config.idRoomMapping.hasOwnProperty(data.id)) {
+                    doc.room = config.idRoomMapping[data.id];
                 }
 
-                UHOME_FIELD_NAMES.forEach(f => {
+                config.data.fieldNameList.forEach(f => {
                     if(data.hasOwnProperty(f) && data[f] > 0) {
-                        let pname = UHOME_FIELD_MAPPING.hasOwnProperty(f) ? UHOME_FIELD_MAPPING[f] : f;
+                        let pname = config.data.fieldNameMapping.hasOwnProperty(f) ? config.data.fieldNameMapping[f] : f;
                         doc[pname] = data[f];
                     }
                 });
                 client.create({
-                    index: indexName,
-                    type: "doc",
+                    index: config.es.indexBaseName,
+                    type: config.es.documentType,
                     id: uuidv4(),
                     body: doc
                 }, (err, res) => {
