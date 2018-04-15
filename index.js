@@ -34,7 +34,7 @@ ls.stdout.pipe(throughLineReader()).on('data', function(data) {
                 }
 
                 config.data.fieldNameList.forEach(f => {
-                    if(data.hasOwnProperty(f) && data[f] > 0) {
+                    if(data.hasOwnProperty(f)) {
                         let pname = config.data.fieldNameMapping.hasOwnProperty(f) ? config.data.fieldNameMapping[f] : f;
                         doc[pname] = data[f];
                     }
