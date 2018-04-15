@@ -2,7 +2,6 @@
 
 module.exports = {
     "rtlBinary": 'rtl_433',
-    "rtlTimezone": 'UTC',
     "rtlArguments": ['-f', '433950000', '-F', 'json', '-R', '99', '-g', '0'],
     "es": {
         "indexBaseName": "sensors-",

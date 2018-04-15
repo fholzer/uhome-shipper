@@ -8,7 +8,7 @@ const config = require('./config'),
 
 var client = new elasticsearch.Client(config.es.client);
 var env = Object.create(process.env);
-env.TZ = config.rtlTimezone;
+env.TZ = "UTC";
 
 var spawn = require('child_process').spawn,
     ls = spawn(config.rtlBinary, config.rtlArguments, { env: env });
@@ -26,7 +26,7 @@ ls.stdout.pipe(throughLineReader()).on('data', function(data) {
             case 'µHome':
                 var doc = {
                     "model": "uhome",
-                    "@timestamp": data.time
+                    "@timestamp": Date.parse(data.time + " GMT")
                 };
 
                 if(data.hasOwnProperty("id") && config.idRoomMapping.hasOwnProperty(data.id)) {
