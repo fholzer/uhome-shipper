@@ -1,7 +1,7 @@
 "use strict";
 
 const config = require('./config'),
-    elasticsearch = require('elasticsearch'),
+    elasticsearch = require('@elastic/elasticsearch'),
     uuidv4 = require('uuid/v4'),
     throughLineReader = require('through2-linereader'),
     process = require('process');
@@ -20,7 +20,7 @@ ls.stdout.pipe(throughLineReader()).on('data', function(data) {
         var data = JSON.parse(data);
 
         var now = new Date(),
-            indexName = config.indexBaseName + now.getUTCFullYear() + "." + (now.getUTCMonth() + 1) + "." + now.getUTCDate();
+            indexName = config.es.indexBaseName + now.getUTCFullYear() + "." + (now.getUTCMonth() + 1);
 
         switch (data.model) {
             case 'µHome':
@@ -40,8 +40,8 @@ ls.stdout.pipe(throughLineReader()).on('data', function(data) {
                     }
                 });
                 client.create({
-                    index: config.es.indexBaseName,
-                    type: config.es.documentType,
+                    index: indexName,
+                    type: "_doc",
                     id: uuidv4(),
                     body: doc
                 }, (err, res) => {

@@ -6,9 +6,8 @@ module.exports = {
     "rtlArguments": ['-f', '433950000', '-F', 'json', '-R', '99', '-g', '0'],
     "es": {
         "indexBaseName": "sensors-",
-        "documentType": "doc",
         "client": {
-            "host": "nuc:9200"
+            "node": "http://nuc:9200"
         }
     },
     "idRoomMapping": {

@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "elasticsearch": "^14.2.2",
+    "@elastic/elasticsearch": "^7.4.0",
     "through2-linereader": "0.0.1",
     "uuid": "^3.2.1"
   }
