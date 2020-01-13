@@ -23,22 +23,32 @@ ls.stdout.pipe(throughLineReader()).on('data', function(data) {
             indexName = config.es.indexBaseName + now.getUTCFullYear() + "." + (now.getUTCMonth() + 1);
 
         switch (data.model) {
-            case 'µHome':
+            case 'Nexus Temperature/Humidity':
                 var doc = {
-                    "model": "uhome",
+                    "model": "nexus",
                     "@timestamp": data.time
                 };
 
-                if(data.hasOwnProperty("id") && config.idRoomMapping.hasOwnProperty(data.id)) {
-                    doc.room = config.idRoomMapping[data.id];
+                if(data.hasOwnProperty("id") && data.hasOwnProperty("channel")) {
+                    var match = config.roomMapping.filter(e => data.id === e.id && data.channel === e.channel);
+                    if(match.length === 1) {
+                        doc.room = match[0].name;
+                    } else {
+                        match = config.ignore.filter(e => data.id === e.id && data.channel === e.channel);
+                        if(match.length === 1) {
+                            return;
+                        }
+                        console.log(`no mapping found for id ${data.id}, channel ${data.channel}`);
+                    }
                 }
 
                 config.data.fieldNameList.forEach(f => {
-                    if(data.hasOwnProperty(f) && data[f] > 0) {
+                    if(data.hasOwnProperty(f)) {
                         let pname = config.data.fieldNameMapping.hasOwnProperty(f) ? config.data.fieldNameMapping[f] : f;
                         doc[pname] = data[f];
                     }
                 });
+
                 client.create({
                     index: indexName,
                     type: "_doc",
