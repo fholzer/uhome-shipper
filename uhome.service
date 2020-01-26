@@ -1,0 +1,19 @@
+[Unit]
+Description=uHome Sensors
+
+[Service]
+Type=simple
+
+# change to non-privileged user. User should be in rtlsdr group for accessing SDR device
+User=root
+
+# change to git repo path
+WorkingDirectory=/home/storm/git/uhome-shipper
+
+# adapt path to node executable
+ExecStart=/usr/bin/node index.js
+
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
